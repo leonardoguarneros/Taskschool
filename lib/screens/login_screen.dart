@@ -36,7 +36,6 @@ class LoginScreen extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
-
             SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -44,13 +43,15 @@ class LoginScreen extends StatelessWidget {
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
-                // Handle login logic here
+                Navigator.pushReplacementNamed(context, '/principal');
               },
               child: Text('Iniciar sesión'),
             ),
             TextButton(
-              onPressed: () {},
-              child: Text('¿No tienes cuenta? Registrate'),
+              onPressed: () {
+                Navigator.pushNamed(context, '/registro');
+              },
+              child: Text('¿No tienes cuenta? Regístrate'),
             ),
           ],
         ),
