@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'inicio_screen.dart';
+
 class PrincipalScreen extends StatefulWidget {
   const PrincipalScreen({super.key});
 
@@ -11,7 +13,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
   int indice = 0;
 
   final List<Widget> paginas = [
-    Center(child: Text('Inicio')),
+    InicioScreen(),
     Center(child: Text('Calendario')),
     Center(child: Text('Materias')),
     Center(child: Text('Ajustes')),
