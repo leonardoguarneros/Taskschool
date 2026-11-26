@@ -16,6 +16,7 @@ class _TareasScreenState extends State<TareasScreen> {
     Tarea(titulo: 'Ejercicios Matemáticas', prioridad: 'Media'),
     Tarea(titulo: 'Tarea de inglés', prioridad: 'Media'),
     Tarea(titulo: 'Lectura de álgebra', prioridad: 'Alta'),
+    Tarea(titulo: 'Tarea de historia'),
   ];
 
   final TextEditingController controlador = TextEditingController();
@@ -51,6 +52,7 @@ class _TareasScreenState extends State<TareasScreen> {
                     tareas.add(Tarea(titulo: controlador.text.trim()));
                   });
                 }
+
                 controlador.clear();
                 Navigator.pop(context);
               },
@@ -77,6 +79,7 @@ class _TareasScreenState extends State<TareasScreen> {
         itemCount: tareas.length,
         itemBuilder: (context, i) {
           final tarea = tareas[i];
+
           return Container(
             margin: EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(

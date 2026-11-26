@@ -8,28 +8,28 @@ class MenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       children: [
-        Text(
+        const Text(
           'Menú',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         GridView.count(
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          children: [
+          physics: const NeverScrollableScrollPhysics(),
+          children: const [
             BotonMenu(texto: 'Servicios', icono: Icons.menu_book),
             BotonMenu(texto: 'Ubicaciones', icono: Icons.location_on),
             BotonMenu(texto: 'Personal', icono: Icons.people),
             BotonMenu(texto: 'Notificación', icono: Icons.notifications),
           ],
         ),
-        SizedBox(height: 12),
-        SizedBox(
+        const SizedBox(height: 12),
+        const SizedBox(
           height: 110,
           child: BotonMenu(texto: 'Galería', icono: Icons.image),
         ),

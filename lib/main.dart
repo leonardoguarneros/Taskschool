@@ -21,7 +21,7 @@ class TaskSchoolApp extends StatelessWidget {
         '/': (context) => const LoginScreen(),
         '/registro': (context) => const RegistroScreen(),
         '/principal': (context) => const PrincipalScreen(),
-        '/tareas': (context) => const TareasScreen(),
+        '/tareas': (context) => TareasScreen(),
       },
     );
   }
