@@ -10,22 +10,31 @@ class TarjetaAzul extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.only(bottom: 8),
-      padding: EdgeInsets.all(12),
-      color: Color(0xFF2B7BE4),
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2)),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             titulo,
             style: TextStyle(
-              color: Colors.white,
+              color: Color(0xFF0B2A6F),
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
           ),
           SizedBox(height: 8),
-          contenido,
+          DefaultTextStyle(
+            style: TextStyle(color: Colors.black87, fontSize: 14),
+            child: contenido,
+          ),
         ],
       ),
     );
