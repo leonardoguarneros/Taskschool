@@ -10,11 +10,8 @@ class InicioScreen extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          SizedBox(
-            width: 60,
-            child: Text(hora, style: TextStyle(color: Colors.white)),
-          ),
-          Text(materia, style: TextStyle(color: Colors.white)),
+          SizedBox(width: 60, child: Text(hora)),
+          Text(materia),
         ],
       ),
     );
@@ -23,25 +20,16 @@ class InicioScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: EdgeInsets.all(8),
+      padding: EdgeInsets.all(12),
       children: [
         TarjetaAzul(
           titulo: 'Próximas tareas (Hoy)',
           contenido: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Ejercicios Matemáticas   Hoy 16:00',
-                style: TextStyle(color: Colors.white),
-              ),
-              Text(
-                'Leer cap.7 Álgebra II   Hoy 16:30',
-                style: TextStyle(color: Colors.white),
-              ),
-              Text(
-                'Leer cap.3 Historia   Hoy 18:00',
-                style: TextStyle(color: Colors.white),
-              ),
+              Text('Ejercicios Matemáticas   Hoy 16:00'),
+              Text('Leer cap.7 Álgebra II   Hoy 16:30'),
+              Text('Leer cap.3 Historia   Hoy 18:00'),
             ],
           ),
         ),
@@ -65,8 +53,8 @@ class InicioScreen extends StatelessWidget {
               child: CircularProgressIndicator(
                 value: 0.6,
                 strokeWidth: 12,
-                backgroundColor: Colors.white,
-                color: Colors.grey,
+                backgroundColor: Color(0xFFDCE8FA),
+                color: Color(0xFF2B7BE4),
               ),
             ),
           ),
@@ -76,16 +64,23 @@ class InicioScreen extends StatelessWidget {
           contenido: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Consultar todas tus tareas',
-                style: TextStyle(color: Colors.white),
-              ),
+              Text('Consultar todas tus tareas'),
               SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/tareas');
-                },
-                child: Text('Ver todas las tareas'),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF2B7BE4),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/tareas');
+                  },
+                  child: Text('Ver todas las tareas'),
+                ),
               ),
             ],
           ),
@@ -94,7 +89,6 @@ class InicioScreen extends StatelessWidget {
           titulo: 'Próxima entrega',
           contenido: Text(
             'Matemáticas: Resolver ejercicios de álgebra\nEntrega: Mañana',
-            style: TextStyle(color: Colors.white),
           ),
         ),
       ],
