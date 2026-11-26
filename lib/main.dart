@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'theme/app_theme.dart';
 import 'screens/login_screen.dart';
 import 'screens/registro_screen.dart';
 import 'screens/principal_screen.dart';
@@ -14,12 +15,13 @@ class TaskSchoolApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.tema,
       initialRoute: '/',
       routes: {
         '/': (context) => const LoginScreen(),
         '/registro': (context) => const RegistroScreen(),
         '/principal': (context) => const PrincipalScreen(),
-        '/tareas': (context) => const TareasScreen(),
+        '/tareas': (context) => TareasScreen(),
       },
     );
   }
