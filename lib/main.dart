@@ -13,15 +13,35 @@ class TaskSchoolApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.tema,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const LoginScreen(),
-        '/registro': (context) => const RegistroScreen(),
-        '/principal': (context) => const PrincipalScreen(),
-        '/tareas': (context) => TareasScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: modoTema,
+      builder: (context, modo, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.tema,
+          darkTheme: AppTheme.oscuro,
+          themeMode: modo,
+          builder: (context, child) {
+            return ColoredBox(
+              color: AppTheme.esOscuro(context)
+                  ? Color(0xFF0A1120)
+                  : Color(0xFFE9EEF7),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 480),
+                  child: child,
+                ),
+              ),
+            );
+          },
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const LoginScreen(),
+            '/registro': (context) => const RegistroScreen(),
+            '/principal': (context) => const PrincipalScreen(),
+            '/tareas': (context) => const TareasScreen(),
+          },
+        );
       },
     );
   }

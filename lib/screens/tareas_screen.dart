@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../database/db_helper.dart';
 import '../models/tarea.dart';
+import '../theme/app_theme.dart';
 import '../widgets/etiqueta_prioridad.dart';
 
 class TareasScreen extends StatefulWidget {
@@ -11,20 +13,28 @@ class TareasScreen extends StatefulWidget {
 }
 
 class _TareasScreenState extends State<TareasScreen> {
-  final List<Tarea> tareas = [
-    Tarea(titulo: 'Leer cap.3 Historia', prioridad: 'Alta'),
-    Tarea(titulo: 'Ejercicios Matemáticas', prioridad: 'Media'),
-    Tarea(titulo: 'Tarea de inglés', prioridad: 'Media'),
-    Tarea(titulo: 'Lectura de álgebra', prioridad: 'Alta'),
-    Tarea(titulo: 'Tarea de historia'),
-  ];
+  List<Tarea> tareas = [];
 
   final TextEditingController controlador = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    cargarTareas();
+  }
 
   @override
   void dispose() {
     controlador.dispose();
     super.dispose();
+  }
+
+  Future<void> cargarTareas() async {
+    final lista = await DbHelper.instancia.obtenerTareas();
+    if (!mounted) return;
+    setState(() {
+      tareas = lista;
+    });
   }
 
   void agregarTarea() {
@@ -46,15 +56,16 @@ class _TareasScreenState extends State<TareasScreen> {
               child: Text('Cancelar'),
             ),
             ElevatedButton(
-              onPressed: () {
-                if (controlador.text.trim().isNotEmpty) {
-                  setState(() {
-                    tareas.add(Tarea(titulo: controlador.text.trim()));
-                  });
+              onPressed: () async {
+                final titulo = controlador.text.trim();
+                if (titulo.isNotEmpty) {
+                  await DbHelper.instancia.insertarTarea(
+                    Tarea(titulo: titulo, prioridad: 'Media'),
+                  );
+                  await cargarTareas();
                 }
-
                 controlador.clear();
-                Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context);
               },
               child: Text('Agregar'),
             ),
@@ -74,45 +85,56 @@ class _TareasScreenState extends State<TareasScreen> {
         foregroundColor: Colors.white,
         child: Icon(Icons.add),
       ),
-      body: ListView.builder(
-        padding: EdgeInsets.all(12),
-        itemCount: tareas.length,
-        itemBuilder: (context, i) {
-          final tarea = tareas[i];
+      body: tareas.isEmpty
+          ? Center(
+              child: Text('Aún no tienes tareas. Toca + para agregar una.'),
+            )
+          : ListView.builder(
+              padding: EdgeInsets.all(12),
+              itemCount: tareas.length,
+              itemBuilder: (context, i) {
+                final tarea = tareas[i];
 
-          return Container(
-            margin: EdgeInsets.only(bottom: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: CheckboxListTile(
-              value: tarea.hecha,
-              onChanged: (valor) {
-                setState(() {
-                  tarea.hecha = valor!;
-                });
+                return Container(
+                  margin: EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.fondoTarjeta(context),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: CheckboxListTile(
+                    value: tarea.hecha,
+                    onChanged: (valor) async {
+                      final actualizada = Tarea(
+                        id: tarea.id,
+                        titulo: tarea.titulo,
+                        prioridad: tarea.prioridad,
+                        hecha: valor!,
+                      );
+                      await DbHelper.instancia.actualizarTarea(actualizada);
+                      await cargarTareas();
+                    },
+                    controlAffinity: ListTileControlAffinity.leading,
+                    activeColor: Color(0xFF2B7BE4),
+                    secondary: EtiquetaPrioridad(prioridad: tarea.prioridad),
+                    title: Text(
+                      tarea.titulo,
+                      style: TextStyle(
+                        decoration: tarea.hecha
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
+                    ),
+                  ),
+                );
               },
-              controlAffinity: ListTileControlAffinity.leading,
-              activeColor: Color(0xFF2B7BE4),
-              secondary: EtiquetaPrioridad(prioridad: tarea.prioridad),
-              title: Text(
-                tarea.titulo,
-                style: TextStyle(
-                  decoration: tarea.hecha ? TextDecoration.lineThrough : null,
-                ),
-              ),
             ),
-          );
-        },
-      ),
     );
   }
 }

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'inicio_screen.dart';
 import 'calendario_screen.dart';
 import 'materias_screen.dart';
-import 'menu_screen.dart';
+import 'ajustes_screen.dart';
 
 class PrincipalScreen extends StatefulWidget {
   const PrincipalScreen({super.key});
@@ -19,13 +18,13 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
     InicioScreen(),
     CalendarioScreen(),
     MateriasScreen(),
-    MenuScreen(),
+    AjustesScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: paginas[indice],
+      body: SafeArea(child: paginas[indice]),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: indice,
         type: BottomNavigationBarType.fixed,
@@ -37,9 +36,7 @@ class _PrincipalScreenState extends State<PrincipalScreen> {
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: 'Calendario',
-          ),
+              icon: Icon(Icons.calendar_month), label: 'Calendario'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Materias'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Ajustes'),
         ],
