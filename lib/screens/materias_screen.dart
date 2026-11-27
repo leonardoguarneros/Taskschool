@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-class Materia {
-  final String nombre;
-  final IconData icono;
-  const Materia(this.nombre, this.icono);
-}
+import '../data/materias.dart';
+import '../models/tarea.dart';
+import '../services/api_service.dart';
+import 'tareas_screen.dart';
 
 class MateriasScreen extends StatefulWidget {
   const MateriasScreen({super.key});
@@ -14,52 +13,7 @@ class MateriasScreen extends StatefulWidget {
 }
 
 class _MateriasScreenState extends State<MateriasScreen> {
-  final Map<String, List<Materia>> materiasPorNivel = {
-    'Primaria': [
-      Materia('Matemáticas', Icons.calculate),
-      Materia('Español', Icons.menu_book),
-      Materia('Ciencias', Icons.eco),
-      Materia('Historia', Icons.account_balance),
-      Materia('Geografía', Icons.public),
-      Materia('Inglés', Icons.translate),
-      Materia('Ed. Física', Icons.sports_soccer),
-      Materia('Artes', Icons.palette),
-    ],
-    'Secundaria': [
-      Materia('Matemáticas', Icons.calculate),
-      Materia('Español', Icons.menu_book),
-      Materia('Biología', Icons.biotech),
-      Materia('Física', Icons.science),
-      Materia('Química', Icons.science),
-      Materia('Historia', Icons.account_balance),
-      Materia('Geografía', Icons.public),
-      Materia('Inglés', Icons.translate),
-      Materia('Cívica', Icons.groups),
-      Materia('Tecnología', Icons.build),
-    ],
-    'Preparatoria': [
-      Materia('Álgebra', Icons.functions),
-      Materia('Cálculo', Icons.calculate),
-      Materia('Física', Icons.science),
-      Materia('Química', Icons.science),
-      Materia('Biología', Icons.biotech),
-      Materia('Literatura', Icons.menu_book),
-      Materia('Historia', Icons.account_balance),
-      Materia('Filosofía', Icons.psychology),
-      Materia('Inglés', Icons.translate),
-      Materia('Informática', Icons.computer),
-    ],
-    'Universidad': [
-      Materia('Programación', Icons.code),
-      Materia('Bases de datos', Icons.storage),
-      Materia('Redes', Icons.hub),
-      Materia('Cálculo', Icons.calculate),
-      Materia('Estadística', Icons.bar_chart),
-      Materia('Ing. de software', Icons.build),
-      Materia('Inteligencia artificial', Icons.smart_toy),
-      Materia('Ética profesional', Icons.gavel),
-    ],
-  };
+  List<Tarea> tareas = [];
 
   final List<Color> colores = [
     Color(0xFFDCE8FA),
@@ -68,42 +22,53 @@ class _MateriasScreenState extends State<MateriasScreen> {
     Color(0xFFDCFAE8),
   ];
 
-  late final Map<String, Set<String>> completadas = {
-    for (final nivel in materiasPorNivel.keys) nivel: <String>{},
-  };
-
-  String nivel = 'Primaria';
-
-  double progresoDe(String n) {
-    final total = materiasPorNivel[n]!.length;
-    return completadas[n]!.length / total;
+  @override
+  void initState() {
+    super.initState();
+    cargar();
   }
 
-  void alternar(Materia materia) {
-    setState(() {
-      final set = completadas[nivel]!;
-      if (set.contains(materia.nombre)) {
-        set.remove(materia.nombre);
-      } else {
-        set.add(materia.nombre);
-      }
-    });
+  Future<void> cargar() async {
+    try {
+      final lista = await ApiService.instancia.obtenerTareas();
+      if (!mounted) return;
+      setState(() {
+        tareas = lista;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudieron cargar las tareas')),
+      );
+    }
+  }
+
+  List<Tarea> deMateria(String nombre) {
+    return tareas.where((t) => t.materia == nombre).toList();
   }
 
   Widget tarjetaMateria(Materia materia, int i) {
-    final hecha = completadas[nivel]!.contains(materia.nombre);
+    final lista = deMateria(materia.nombre);
+    final hechas = lista.where((t) => t.hecha).length;
+    final pendientes = lista.length - hechas;
+    final progreso = lista.isEmpty ? 0.0 : hechas / lista.length;
+    const navy = Color(0xFF0B2A6F);
 
     return GestureDetector(
-      onTap: () => alternar(materia),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 250),
-        decoration: BoxDecoration(
-          color: hecha ? Color(0xFFBFEBCB) : colores[i % colores.length],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: hecha ? Color(0xFF2E9E57) : Colors.transparent,
-            width: 2,
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TareasScreen(materia: materia.nombre),
           ),
+        );
+        cargar();
+      },
+      child: Container(
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: colores[i % colores.length],
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Stack(
           children: [
@@ -111,31 +76,53 @@ class _MateriasScreenState extends State<MateriasScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(materia.icono, size: 32, color: Color(0xFF0B2A6F)),
-                  SizedBox(height: 8),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(
-                      materia.nombre,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: Color(0xFF0B2A6F),
-                      ),
+                  Icon(materia.icono, size: 28, color: navy),
+                  SizedBox(height: 6),
+                  Text(
+                    materia.nombre,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: navy,
                     ),
                   ),
+                  SizedBox(height: 8),
+                  if (lista.isEmpty)
+                    Text(
+                      'Sin tareas',
+                      style: TextStyle(fontSize: 11, color: navy),
+                    )
+                  else ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progreso,
+                        minHeight: 6,
+                        backgroundColor: Colors.white,
+                        color: Color(0xFF2B7BE4),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '$hechas/${lista.length}',
+                      style: TextStyle(fontSize: 11, color: navy),
+                    ),
+                  ],
                 ],
               ),
             ),
-            if (hecha)
+            if (pendientes > 0)
               Positioned(
-                top: 6,
-                right: 6,
-                child: Icon(
-                  Icons.check_circle,
-                  size: 20,
-                  color: Color(0xFF2E9E57),
+                top: 0,
+                right: 0,
+                child: CircleAvatar(
+                  radius: 10,
+                  backgroundColor: Color(0xFFC62828),
+                  child: Text(
+                    '$pendientes',
+                    style: TextStyle(color: Colors.white, fontSize: 11),
+                  ),
                 ),
               ),
           ],
@@ -146,9 +133,27 @@ class _MateriasScreenState extends State<MateriasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final nivel = nivelActual.value;
     final materias = materiasPorNivel[nivel]!;
-    final progreso = progresoDe(nivel);
-    final hechas = completadas[nivel]!.length;
+
+    int totalTareas = 0;
+    int totalHechas = 0;
+    final pendientesPorMateria = <String, int>{};
+
+    for (final m in materias) {
+      final lista = deMateria(m.nombre);
+      final hechas = lista.where((t) => t.hecha).length;
+      totalTareas += lista.length;
+      totalHechas += hechas;
+      if (lista.length - hechas > 0) {
+        pendientesPorMateria[m.nombre] = lista.length - hechas;
+      }
+    }
+
+    final progreso = totalTareas == 0 ? 0.0 : totalHechas / totalTareas;
+    final masPendientes = pendientesPorMateria.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final maximo = masPendientes.isEmpty ? 1 : masPendientes.first.value;
 
     return ListView(
       padding: EdgeInsets.all(12),
@@ -166,17 +171,18 @@ class _MateriasScreenState extends State<MateriasScreen> {
               selected: n == nivel,
               onSelected: (_) {
                 setState(() {
-                  nivel = n;
+                  nivelActual.value = n;
                 });
               },
             );
           }).toList(),
         ),
         SizedBox(height: 12),
-        Text('Toca una materia para marcarla como completada'),
+        Text('Toca una materia para ver y agregar sus tareas'),
         SizedBox(height: 12),
         GridView.extent(
           maxCrossAxisExtent: 130,
+          childAspectRatio: 0.9,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
           shrinkWrap: true,
@@ -227,39 +233,44 @@ class _MateriasScreenState extends State<MateriasScreen> {
             SizedBox(width: 16),
             Expanded(
               child: Text(
-                '$hechas de ${materias.length} materias completadas',
+                '$totalHechas de $totalTareas tareas completadas',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
         SizedBox(height: 20),
-        for (final n in materiasPorNivel.keys)
-          Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(n),
-                    Text('${(progresoDe(n) * 100).round()}%'),
-                  ],
-                ),
-                SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: progresoDe(n),
-                    minHeight: 8,
-                    backgroundColor: Color(0xFFDCE8FA),
-                    color: Color(0xFF2B7BE4),
+        Text(
+          'Lo que más tienes pendiente',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 8),
+        if (masPendientes.isEmpty)
+          Text('No tienes tareas pendientes en este nivel')
+        else
+          for (final e in masPendientes.take(3))
+            Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [Text(e.key), Text('${e.value} pendientes')],
                   ),
-                ),
-              ],
+                  SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: e.value / maximo,
+                      minHeight: 8,
+                      backgroundColor: Color(0xFFDCE8FA),
+                      color: Color(0xFFC62828),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
       ],
     );
   }

@@ -1,27 +1,38 @@
 class Tarea {
-  final int? id;
-  final String titulo;
-  final String prioridad;
-  final bool hecha;
+  int? id;
+  String titulo;
+  String prioridad;
+  bool hecha;
+  String? fechaLimite;
+  String? materia;
 
   Tarea({
     this.id,
     required this.titulo,
-    required this.prioridad,
+    this.prioridad = 'Media',
     this.hecha = false,
+    this.fechaLimite,
+    this.materia,
   });
 
-  factory Tarea.fromMap(Map<String, dynamic> m) => Tarea(
-    id: m['id'] as int?,
-    titulo: m['titulo'] as String,
-    prioridad: m['prioridad'] as String,
-    hecha: (m['hecha'] as int) == 1,
-  );
+  factory Tarea.fromJson(Map<String, dynamic> json) {
+    return Tarea(
+      id: json['id'] as int,
+      titulo: json['titulo'] as String,
+      prioridad: json['prioridad'] as String,
+      hecha: json['hecha'] as bool,
+      fechaLimite: json['fecha_limite'] as String?,
+      materia: json['materia'] as String?,
+    );
+  }
 
-  Map<String, dynamic> toMap() => {
-    if (id != null) 'id': id,
-    'titulo': titulo,
-    'prioridad': prioridad,
-    'hecha': hecha ? 1 : 0,
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'titulo': titulo,
+      'prioridad': prioridad,
+      'hecha': hecha,
+      'fecha_limite': fechaLimite,
+      'materia': materia,
+    };
+  }
 }

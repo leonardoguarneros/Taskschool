@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../database/db_helper.dart';
+
 import '../models/tarea.dart';
+import '../services/api_service.dart';
 import '../widgets/tarjeta_azul.dart';
 
 class CalendarioScreen extends StatefulWidget {
@@ -20,11 +21,18 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
   }
 
   Future<void> cargar() async {
-    final lista = await DbHelper.instancia.obtenerTareas();
-    if (!mounted) return;
-    setState(() {
-      pendientes = lista.where((t) => !t.hecha).toList();
-    });
+    try {
+      final lista = await ApiService.instancia.obtenerTareas();
+      if (!mounted) return;
+      setState(() {
+        pendientes = lista.where((t) => !t.hecha).toList();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo conectar con el servidor')),
+      );
+    }
   }
 
   @override
@@ -44,8 +52,9 @@ class _CalendarioScreenState extends State<CalendarioScreen> {
               ? Text('Sin tareas pendientes')
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children:
-                      pendientes.map((t) => Text('• ${t.titulo}')).toList(),
+                  children: pendientes
+                      .map((t) => Text('• ${t.titulo}'))
+                      .toList(),
                 ),
         ),
       ],

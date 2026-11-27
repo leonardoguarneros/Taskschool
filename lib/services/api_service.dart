@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/clase.dart';
 import '../models/tarea.dart';
 
 class ApiException implements Exception {
@@ -82,14 +83,14 @@ class ApiService {
     final r = await http.get(Uri.parse('$baseUrl/tareas'), headers: _cabeceras);
     if (r.statusCode != 200) throw ApiException(_mensajeError(r));
     final lista = _json(r) as List;
-    return lista.map((e) => Tarea.fromMap(e as Map<String, dynamic>)).toList();
+    return lista.map((e) => Tarea.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<void> insertarTarea(Tarea tarea) async {
     final r = await http.post(
       Uri.parse('$baseUrl/tareas'),
       headers: _cabeceras,
-      body: jsonEncode(tarea.toMap()),
+      body: jsonEncode(tarea.toJson()),
     );
     if (r.statusCode != 200) throw ApiException(_mensajeError(r));
   }
@@ -98,7 +99,7 @@ class ApiService {
     final r = await http.put(
       Uri.parse('$baseUrl/tareas/${tarea.id}'),
       headers: _cabeceras,
-      body: jsonEncode(tarea.toMap()),
+      body: jsonEncode(tarea.toJson()),
     );
     if (r.statusCode != 200) throw ApiException(_mensajeError(r));
   }
@@ -111,36 +112,31 @@ class ApiService {
     if (r.statusCode != 200) throw ApiException(_mensajeError(r));
   }
 
-  // ---------- Materias ----------
+  // ---------- Horario ----------
 
-  Future<Map<String, Set<String>>> obtenerMaterias() async {
+  Future<List<Clase>> obtenerHorario() async {
     final r = await http.get(
-      Uri.parse('$baseUrl/materias'),
+      Uri.parse('$baseUrl/horario'),
       headers: _cabeceras,
     );
     if (r.statusCode != 200) throw ApiException(_mensajeError(r));
-    final resultado = <String, Set<String>>{};
-    for (final fila in _json(r) as List) {
-      resultado
-          .putIfAbsent(fila['nivel'] as String, () => <String>{})
-          .add(fila['materia'] as String);
-    }
-    return resultado;
+    final lista = _json(r) as List;
+    return lista.map((e) => Clase.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<void> marcarMateria(
-    String nivel,
-    String materia,
-    bool completada,
-  ) async {
-    final r = await http.put(
-      Uri.parse('$baseUrl/materias'),
+  Future<void> insertarClase(Clase clase) async {
+    final r = await http.post(
+      Uri.parse('$baseUrl/horario'),
       headers: _cabeceras,
-      body: jsonEncode({
-        'nivel': nivel,
-        'materia': materia,
-        'completada': completada,
-      }),
+      body: jsonEncode(clase.toJson()),
+    );
+    if (r.statusCode != 200) throw ApiException(_mensajeError(r));
+  }
+
+  Future<void> eliminarClase(int id) async {
+    final r = await http.delete(
+      Uri.parse('$baseUrl/horario/$id'),
+      headers: _cabeceras,
     );
     if (r.statusCode != 200) throw ApiException(_mensajeError(r));
   }

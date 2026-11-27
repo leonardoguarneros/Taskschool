@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../database/db_helper.dart';
+import '../data/materias.dart';
 import '../models/tarea.dart';
+import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/etiqueta_prioridad.dart';
 
 class TareasScreen extends StatefulWidget {
-  const TareasScreen({super.key});
+  final String? materia;
+
+  const TareasScreen({super.key, this.materia});
 
   @override
   State<TareasScreen> createState() => _TareasScreenState();
@@ -14,7 +17,6 @@ class TareasScreen extends StatefulWidget {
 
 class _TareasScreenState extends State<TareasScreen> {
   List<Tarea> tareas = [];
-
   final TextEditingController controlador = TextEditingController();
 
   @override
@@ -29,47 +31,100 @@ class _TareasScreenState extends State<TareasScreen> {
     super.dispose();
   }
 
-  Future<void> cargarTareas() async {
-    final lista = await DbHelper.instancia.obtenerTareas();
+  void mostrar(String texto) {
     if (!mounted) return;
-    setState(() {
-      tareas = lista;
-    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
+  }
+
+  Future<void> cargarTareas() async {
+    try {
+      final lista = await ApiService.instancia.obtenerTareas();
+      if (!mounted) return;
+      setState(() {
+        tareas = lista;
+      });
+    } on ApiException catch (e) {
+      mostrar(e.mensaje);
+    } catch (_) {
+      mostrar('No se pudo conectar con el servidor');
+    }
   }
 
   void agregarTarea() {
+    String? materiaElegida = widget.materia;
+    final opciones = materiasPorNivel[nivelActual.value]!
+        .map((m) => m.nombre)
+        .toList();
+
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text('Nueva tarea'),
-          content: TextField(
-            controller: controlador,
-            decoration: InputDecoration(hintText: 'Título de la tarea'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                controlador.clear();
-                Navigator.pop(context);
-              },
-              child: Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final titulo = controlador.text.trim();
-                if (titulo.isNotEmpty) {
-                  await DbHelper.instancia.insertarTarea(
-                    Tarea(titulo: titulo, prioridad: 'Media'),
-                  );
-                  await cargarTareas();
-                }
-                controlador.clear();
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: Text('Agregar'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setDialog) {
+            return AlertDialog(
+              title: Text('Nueva tarea'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: controlador,
+                      decoration: InputDecoration(
+                        hintText: 'Título de la tarea',
+                      ),
+                    ),
+                    if (widget.materia == null) ...[
+                      SizedBox(height: 16),
+                      Text('Materia'),
+                      SizedBox(height: 6),
+                      Wrap(
+                        spacing: 6,
+                        children: opciones.map((o) {
+                          return ChoiceChip(
+                            label: Text(o),
+                            selected: materiaElegida == o,
+                            onSelected: (activado) {
+                              setDialog(() {
+                                materiaElegida = activado ? o : null;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    controlador.clear();
+                    Navigator.pop(context);
+                  },
+                  child: Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final titulo = controlador.text.trim();
+                    if (titulo.isNotEmpty) {
+                      try {
+                        await ApiService.instancia.insertarTarea(
+                          Tarea(titulo: titulo, materia: materiaElegida),
+                        );
+                        await cargarTareas();
+                      } catch (_) {
+                        mostrar('No se pudo guardar la tarea');
+                      }
+                    }
+                    controlador.clear();
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: Text('Agregar'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -77,23 +132,32 @@ class _TareasScreenState extends State<TareasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final visibles = widget.materia == null
+        ? tareas
+        : tareas.where((t) => t.materia == widget.materia).toList();
+
     return Scaffold(
-      appBar: AppBar(title: Text('Mis tareas')),
+      appBar: AppBar(title: Text(widget.materia ?? 'Mis tareas')),
       floatingActionButton: FloatingActionButton(
         onPressed: agregarTarea,
         backgroundColor: Color(0xFF2B7BE4),
         foregroundColor: Colors.white,
         child: Icon(Icons.add),
       ),
-      body: tareas.isEmpty
+      body: visibles.isEmpty
           ? Center(
-              child: Text('Aún no tienes tareas. Toca + para agregar una.'),
+              child: Text(
+                widget.materia == null
+                    ? 'Aún no tienes tareas. Toca + para agregar una.'
+                    : 'No hay tareas de ${widget.materia}. Toca + para agregar una.',
+                textAlign: TextAlign.center,
+              ),
             )
           : ListView.builder(
               padding: EdgeInsets.all(12),
-              itemCount: tareas.length,
+              itemCount: visibles.length,
               itemBuilder: (context, i) {
-                final tarea = tareas[i];
+                final tarea = visibles[i];
 
                 return Container(
                   margin: EdgeInsets.only(bottom: 10),
@@ -111,14 +175,17 @@ class _TareasScreenState extends State<TareasScreen> {
                   child: CheckboxListTile(
                     value: tarea.hecha,
                     onChanged: (valor) async {
-                      final actualizada = Tarea(
-                        id: tarea.id,
-                        titulo: tarea.titulo,
-                        prioridad: tarea.prioridad,
-                        hecha: valor!,
-                      );
-                      await DbHelper.instancia.actualizarTarea(actualizada);
-                      await cargarTareas();
+                      setState(() {
+                        tarea.hecha = valor!;
+                      });
+                      try {
+                        await ApiService.instancia.actualizarTarea(tarea);
+                      } catch (_) {
+                        setState(() {
+                          tarea.hecha = !valor!;
+                        });
+                        mostrar('No se pudo actualizar la tarea');
+                      }
                     },
                     controlAffinity: ListTileControlAffinity.leading,
                     activeColor: Color(0xFF2B7BE4),
@@ -131,6 +198,9 @@ class _TareasScreenState extends State<TareasScreen> {
                             : null,
                       ),
                     ),
+                    subtitle: tarea.materia == null
+                        ? null
+                        : Text(tarea.materia!),
                   ),
                 );
               },
